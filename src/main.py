@@ -74,10 +74,38 @@ class Skin_action(Enum):
     COPY_FROM_SAVED      = 2
     SAVE_FROM_SKIN       = 3
 
-def copy_sounds_from_skin(src_skin: str, dest_skin: str) -> None:
-    return
 
-def copy_sounds_to_skin(src_skin: str, dest_skin: str) -> None:
+def print_skins(skins: list[str]) -> None:
+    for i in range(len(skins)):
+        print(f"{i + 1}: {skins[i]}")
+    print()
+
+def copy_sounds_from_skin(src_folder: str, dst_folder: str) -> None:
+    src_skin_name: str = os.path.basename(os.path.normpath(src_folder))
+    dst_skin_name: str = os.path.basename(os.path.normpath(dst_folder))
+    print(f"Copying hitsounds from {src_skin_name} to {dst_skin_name}")
+
+    # delete all the hitsounds in the destination skin
+    for hitsound_set in HITSOUND_SETS:
+        for filename in hitsound_set.filenames:
+            for format in hitsound_set.formats:
+                src_file_path: str = os.path.join(dst_folder, f"{filename}.{format}")
+                if os.path.exists(src_file_path):
+                    os.remove(src_file_path)
+                    break
+
+    # copy the sounds over
+    for hitsound_set in HITSOUND_SETS:
+        for filename in hitsound_set.filenames:
+            for format in hitsound_set.formats:
+                src_file_path: str = os.path.join(src_folder, f"{filename}.{format}")
+                dst_file_path: str = os.path.join(dst_folder, f"{filename}.{format}")
+                if os.path.exists(src_file_path):
+                    shutil.copy(src_file_path, dst_file_path)
+                    break
+
+
+def copy_sounds_from_saved(dest_skin: str) -> None:
     return
 
 def save_sounds(src_folder: str) -> None:
@@ -122,8 +150,6 @@ def save_sounds(src_folder: str) -> None:
                     shutil.copy(src_file_path, dst_file_path)
                     break
 
-    return
-
 def main() -> None:
     actions: list[str] = [
         "copy sounds from skin to another",
@@ -148,14 +174,20 @@ def main() -> None:
 
     match Skin_action(user_input):
         case Skin_action.COPY_TO_OTHER_SKIN:
+            print_skins(skins)
+            src_skin: str = skins[int(input("Select the source skin: ")) - 1]
+            dst_skin: str = skins[int(input("Select the destination skin: ")) - 1]
+            print(LINE_SEPERATOR)
+
+            src_skin_path: str = os.path.join(skins_folder_path, src_skin)
+            dst_skin_path: str = os.path.join(skins_folder_path, dst_skin)
+            copy_sounds_from_skin(src_skin_path, dst_skin_path)
             return
         case Skin_action.COPY_FROM_SAVED:
             return
         case Skin_action.SAVE_FROM_SKIN:
-            for i in range(len(skins)):
-                print(f"{i + 1}: {skins[i]}")
-            print()
-            selected_skin: str = skins[int(input("Select a skin or 0 to exit: ")) - 1]
+            print_skins(skins)
+            selected_skin: str = skins[int(input("Select a skin: ")) - 1]
             print(LINE_SEPERATOR)
             selected_skin_path: str = os.path.join(skins_folder_path, selected_skin)
             save_sounds(selected_skin_path)
